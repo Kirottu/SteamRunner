@@ -2,7 +2,7 @@ mod game_config;
 
 use clap::{App, Arg};
 use game_config::{ConfigOption, GameConfig};
-use std::{env, path::Path, process::Command};
+use std::{env, fs, path::Path, process::Command};
 
 fn main() {
     let matches = App::new("SteamTinkerLaunch-rs")
@@ -25,11 +25,14 @@ fn main() {
     let config_dir = env::var("XDG_CONFIG_HOME")
         .unwrap_or(format!("{}/.config/stl-rs", env::var("HOME").unwrap()));
 
+    if !Path::new(&config_dir).exists() {
+        create_config_dirs(&config_dir);
+    }
+
     let global_config = if Path::new(&format!("{}/global_config.yaml", config_dir)).exists() {
         GameConfig::load(&format!("{}/global_config.yaml", config_dir))
     } else {
         let global_config = GameConfig {
-            appid: appid.parse::<u32>().unwrap(),
             placeholder_launch_command: "%mangohud%%obs-vkcapture%%obs-glcapture% %command%"
                 .to_string(),
             placeholder_map: vec![
@@ -58,4 +61,23 @@ fn main() {
         .arg(global_config.get_launch_command(&command.to_string()))
         .spawn()
         .unwrap();
+}
+
+fn create_config_dirs(config_dir: &String) {
+    fs::create_dir(config_dir).unwrap_or(());
+    fs::create_dir(&format!("{}/game_configs", config_dir)).unwrap();
+}
+
+fn create_new_game_config(
+    config_dir: &String,
+    global_config: &GameConfig,
+    appid: u32,
+) -> GameConfig {
+    if !Path::new(&format!("{}/game_configs", config_dir)).exists() {
+        create_config_dirs(config_dir);
+    }
+
+    global_config.save(&format!("{}/game_configs/{}.yaml", config_dir, appid));
+
+    (*global_config).clone()
 }

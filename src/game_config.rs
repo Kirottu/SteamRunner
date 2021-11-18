@@ -1,8 +1,8 @@
-use std::{fs::File, io::Write, path::Path};
+use std::{fs::File, io::Write};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigOption {
     placeholder: String,
     replace_with: String,
@@ -19,9 +19,8 @@ impl ConfigOption {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameConfig {
-    pub appid: u32,
     pub placeholder_launch_command: String,
     pub placeholder_map: Vec<ConfigOption>,
 }
