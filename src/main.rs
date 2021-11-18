@@ -1,7 +1,8 @@
-use clap::{App, Arg};
-use std::process::Command;
+mod game_config;
 
-const VKCAPTURE_PLACEHOLDER: &str = "%obs% %command%";
+use clap::{App, Arg};
+use game_config::{ConfigOption, GameConfig};
+use std::{env, path::Path, process::Command};
 
 fn main() {
     let matches = App::new("SteamTinkerLaunch-rs")
@@ -21,18 +22,40 @@ fn main() {
 
     let appid = appid_str.split("=").last().unwrap();
 
-    let mut launch_command = VKCAPTURE_PLACEHOLDER.to_string();
+    let config_dir = env::var("XDG_CONFIG_HOME")
+        .unwrap_or(format!("{}/.config/stl-rs", env::var("HOME").unwrap()));
 
-    if VKCAPTURE_PLACEHOLDER.contains("%obs%") {
-        launch_command = launch_command.replace("%obs%", "obs-vkcapture");
-    }
-    launch_command = launch_command.replace("%command%", command);
+    let global_config = if Path::new(&format!("{}/global_config.yaml", config_dir)).exists() {
+        GameConfig::load(&format!("{}/global_config.yaml", config_dir))
+    } else {
+        let global_config = GameConfig {
+            appid: appid.parse::<u32>().unwrap(),
+            placeholder_launch_command: "%mangohud%%obs-vkcapture%%obs-glcapture% %command%"
+                .to_string(),
+            placeholder_map: vec![
+                ConfigOption::new(&"%mangohud%".to_string(), &"mangohud ".to_string(), false),
+                ConfigOption::new(
+                    &"%obs-vkcapture%".to_string(),
+                    &"obs-vkcapture ".to_string(),
+                    false,
+                ),
+                ConfigOption::new(
+                    &"%obs-glcapture%".to_string(),
+                    &"obs-glcapture ".to_string(),
+                    false,
+                ),
+            ],
+        };
 
-    println!("\"{}\"", launch_command);
+        global_config.save(&format!("{}/global_config.yaml", config_dir));
+        global_config
+    };
+
+    println!("{:?}", global_config);
 
     Command::new("sh")
         .arg("-c")
-        .arg(format!("'{}'", launch_command))
+        .arg(global_config.get_launch_command(&command.to_string()))
         .spawn()
         .unwrap();
 }
