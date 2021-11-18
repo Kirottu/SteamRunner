@@ -1,0 +1,1 @@
+/home/kirottu/.local/share/Steam/ubuntu12_32/reaper SteamLaunch AppId=8870 -- /home/kirottu/.local/share/Steam/steamapps/common/SteamLinuxRuntime_soldier/_v2-entry-point --verb=waitforexitandrun -- /home/kirottu/.local/share/Steam/compatibilitytools.d/Proton-6.21-GE-2/proton waitforexitandrun /sdb/steamlibrary/steamapps/common/BioShock Infinite/Binaries/Win32/BioShockInfinite.exe
