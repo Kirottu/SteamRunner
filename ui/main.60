@@ -1,0 +1,6 @@
+Test := Window {
+	Text {
+		text: "Jere(mo)";
+		color: white;
+	}
+}

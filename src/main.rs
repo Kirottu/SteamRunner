@@ -4,6 +4,7 @@ use clap::{App, Arg};
 use game_config::{ConfigOption, GameConfig};
 use std::{env, fs, path::Path, process::Command};
 
+sixtyfps::include_modules!();
 fn main() {
     let matches = App::new("SteamTinkerLaunch-rs")
         .arg(Arg::with_name("command").required(true).takes_value(true))
@@ -79,9 +80,11 @@ fn main() {
         create_new_game_config(&config_dir, &global_config, appid)
     };
 
+    Test::new().run();
+
     Command::new("sh")
         .arg("-c")
-        .arg(global_config.get_launch_command(&command.to_string()))
+        .arg(game_config.get_launch_command(&command.to_string()))
         .spawn()
         .unwrap();
 }
