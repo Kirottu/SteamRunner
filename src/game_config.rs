@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 // Struct to contain the values for one specific option
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigOption {
-    placeholder: String,
-    replace_with: String,
-    enabled: bool,
-    modified: bool,
+    pub placeholder: String,
+    pub replace_with: String,
+    pub enabled: bool,
+    pub modified: bool,
 }
 
 impl ConfigOption {
@@ -26,6 +26,7 @@ impl ConfigOption {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameConfig {
     pub placeholder_launch_command: String,
+    pub launch_command_modified: bool,
     pub placeholder_map: Vec<ConfigOption>,
 }
 
@@ -57,5 +58,25 @@ impl GameConfig {
         let mut file = File::create(path).unwrap();
         file.write_all(&serde_yaml::to_string(self).unwrap().as_bytes())
             .unwrap();
+    }
+
+    pub fn merge_with(&mut self, config: &GameConfig) {
+        for config_opt in &config.placeholder_map {
+            let mut replaced = false;
+            for self_opt in &mut self.placeholder_map {
+                if !self_opt.modified && self_opt.placeholder == config_opt.placeholder {
+                    self_opt.placeholder = config_opt.placeholder.clone();
+                    self_opt.replace_with = config_opt.replace_with.clone();
+                    replaced = true;
+                    break;
+                }
+            }
+            if !replaced {
+                self.placeholder_map.push((*config_opt).clone());
+            }
+        }
+        if !self.launch_command_modified {
+            self.placeholder_launch_command = config.placeholder_launch_command.clone();
+        }
     }
 }

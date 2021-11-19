@@ -1,6 +1,162 @@
-Test := Window {
-	Text {
-		text: "Jere(mo)";
-		color: white;
+import { Button, ListView, CheckBox } from "sixtyfps_widgets.60";
+
+struct SixtyConfigOption := {
+    placeholder: string,
+    replace_with: string,
+    enabled: bool,
+    modified: bool,
+}
+
+
+ButtonBar := Rectangle {
+	callback buttonpressed(int);
+	
+	property <[string]> button_texts;
+
+	background: @linear-gradient(90deg, #5e81ac 0%, #b48ead 100%);
+	height: 40px;
+	HorizontalLayout {
+		alignment: end;
+		for title[i] in button_texts : Button {
+			property <int> ind: i;
+			padding: 5px;
+			height: parent.height;
+			text: title;
+			clicked => { buttonpressed(ind); }
+		}
+	}
+}
+
+ConfigEdit := Rectangle {
+	callback buttonpressed(int);
+
+	property <[SixtyConfigOption]> config_options;
+	property <bool> enable_merge_button;
+
+	ListView {
+		height: parent.height - button_bar.height;
+		for option[i] in config_options : HorizontalLayout {
+			alignment: end;
+			Text {
+				
+				text: option.placeholder + " " + option.replace_with;
+				horizontal-alignment: TextHorizontalAlignment.left;
+			}
+			button := Button {
+				text: "Edit";
+				clicked => {}
+			}
+			checkbox := CheckBox {
+				checked: option.enabled; 
+				toggled => {}
+			}
+		}
+	}
+
+	button_bar := ButtonBar {
+		button_texts: ["Back", "Save", "Merge Global Config"];
+		y: parent.height - height;
+
+		buttonpressed(index) => { buttonpressed(index); }
+	}
+}
+
+Main := Window {
+	title: "SteamTinkerLaunch-rs";
+	height: 400px;
+	width: 600px;
+	
+	callback quit();
+	
+	callback edit_global_config();
+	callback edit_game_config();
+	callback save_global_config();
+	callback save_game_config();
+	
+	callback print_val(int);
+
+	property <image> banner;
+	property <string> appid;
+	property <bool> launch_cancelled: true;
+
+	property <[SixtyConfigOption]> game_config_options;
+	property <[SixtyConfigOption]> global_config_options;
+	
+	edit_game_config() => {
+		startup_layout.visible = false;
+		game_config_layout.visible = true;
+	}
+
+	edit_global_config() => {
+		startup_layout.visible = false;
+	}
+
+	// The first layout you see when the software starts up
+	startup_layout := Rectangle {
+		HorizontalLayout {
+			alignment: start;
+			padding: 0px;
+			spacing: 5px;
+			Image {
+				source: banner;
+				height: parent.height - button_bar.height;
+				width: banner.width * height / banner.height;
+			}
+			VerticalLayout {
+				Text {
+					text: appid;
+					font-size: 20px;
+				}
+			}
+		}
+		button_bar := Rectangle {
+			background: @linear-gradient(90deg, #5e81ac 0%, #b48ead 100%);
+			height: 40px;
+			y: parent.height - height;
+			HorizontalLayout {
+				alignment: end;
+				Button {
+					width: 100px;
+					padding: 5px;
+					height: parent.height;
+					text: "Cancel Launch";
+					clicked => { launch_cancelled = true; root.quit(); }
+				}
+				Button {
+					width: 100px;
+					padding: 5px;
+					height: parent.height;
+					text: "Game Config";
+					clicked => { root.edit_game_config(); }
+				}
+				Button {
+					width: 100px;
+					padding: 5px;
+					height: parent.height;
+					text: "Global Config";
+					clicked => { root.edit_global_config(); }
+				}
+				Button {
+					width: 100px;
+					padding: 5px;
+					height: parent.height;
+					text: "Start Game";
+					clicked => { launch_cancelled = false; root.quit(); }
+				}
+			}
+		}
+	}
+	game_config_layout := ConfigEdit {
+		visible: false;
+		config_options: game_config_options;
+		enable_merge_button: true;
+
+		buttonpressed(index) => {
+			if (index == 0) {
+				game_config_layout.visible = false;
+				startup_layout.visible = true;
+			}
+			print_val(index);
+		}
 	}
 }

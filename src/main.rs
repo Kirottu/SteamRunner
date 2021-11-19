@@ -1,10 +1,14 @@
 mod game_config;
+mod ui;
 
 use clap::{App, Arg};
 use game_config::{ConfigOption, GameConfig};
-use std::{env, fs, path::Path, process::Command};
+use std::{
+    env, fs,
+    path::Path,
+    process::{exit, Command},
+};
 
-sixtyfps::include_modules!();
 fn main() {
     let matches = App::new("SteamTinkerLaunch-rs")
         .arg(Arg::with_name("command").required(true).takes_value(true))
@@ -38,12 +42,13 @@ fn main() {
 
     // Load global config from the file if it exists, and fall back to a statically defined version
     // if the file does not exist
-    let global_config = if Path::new(&format!("{}/global_config.yaml", config_dir)).exists() {
+    let mut global_config = if Path::new(&format!("{}/global_config.yaml", config_dir)).exists() {
         GameConfig::load(&format!("{}/global_config.yaml", config_dir))
     } else {
         let global_config = GameConfig {
             placeholder_launch_command: "%mangohud%%obs-vkcapture%%obs-glcapture% %command%"
                 .to_string(),
+            launch_command_modified: false,
             placeholder_map: vec![
                 ConfigOption::new(
                     &"%mangohud%".to_string(),
@@ -73,20 +78,22 @@ fn main() {
 
     // Game specific config file
     // Load the file if it exists, otherwise create it and then return the global config
-    let game_config = if Path::new(&format!("{}/game_configs/{}.yaml", config_dir, appid)).exists()
-    {
-        GameConfig::load(&format!("{}/game_configs/{}.yaml", config_dir, appid))
-    } else {
-        create_new_game_config(&config_dir, &global_config, appid)
-    };
+    let mut game_config =
+        if Path::new(&format!("{}/game_configs/{}.yaml", config_dir, appid)).exists() {
+            GameConfig::load(&format!("{}/game_configs/{}.yaml", config_dir, appid))
+        } else {
+            create_new_game_config(&config_dir, &global_config, appid)
+        };
 
-    Test::new().run();
+    if ui::run(&mut global_config, &mut game_config, appid) {
+        exit(1);
+    }
 
-    Command::new("sh")
-        .arg("-c")
-        .arg(game_config.get_launch_command(&command.to_string()))
-        .spawn()
-        .unwrap();
+    /*Command::new("sh")
+    .arg("-c")
+    .arg(game_config.get_launch_command(&command.to_string()))
+    .spawn()
+    .unwrap();*/
 }
 
 fn create_config_dirs(config_dir: &String) {
