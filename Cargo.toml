@@ -13,6 +13,7 @@ clap = "2.33.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 sixtyfps = "0.1.4"
+lazy_static = "1.4"
 
 [build-dependencies]
 sixtyfps-build = "0.1.4"

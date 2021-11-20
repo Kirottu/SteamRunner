@@ -25,6 +25,7 @@ impl ConfigOption {
 // Entire struct to contain all ConfigOptions for the game specific config or the global config
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameConfig {
+    pub appid: u32,
     pub placeholder_launch_command: String,
     pub launch_command_modified: bool,
     pub placeholder_map: Vec<ConfigOption>,
@@ -77,6 +78,23 @@ impl GameConfig {
         }
         if !self.launch_command_modified {
             self.placeholder_launch_command = config.placeholder_launch_command.clone();
+        }
+    }
+
+    pub fn set_on_sixtyfps(&self, main_window: &crate::ui::Main, is_game_config: bool) {
+        let config_options: Vec<crate::ui::SixtyConfigOption> = self
+            .placeholder_map
+            .iter()
+            .map(|option| (*option).clone().into())
+            .collect();
+        if is_game_config {
+            main_window.set_game_config_options(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+                sixtyfps::VecModel::from(config_options),
+            )));
+        } else {
+            main_window.set_global_config_options(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+                sixtyfps::VecModel::from(config_options),
+            )));
         }
     }
 }

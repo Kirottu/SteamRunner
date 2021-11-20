@@ -1,0 +1,96 @@
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS32): ignored.
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "mangohud" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "mangohud", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "mangohu" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "mangohu", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "mangoh" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "mangoh", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "mango" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "mango", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "mang" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "mang", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "man" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "man", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "ma" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "ma", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "m" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "m", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "M" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "M", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MA" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MA", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MAN" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MAN", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANG" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANG", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGO" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGO", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGOH" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGOH", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGOHU" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGOHU", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGOHUD" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGOHUD", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGOHUD=" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGOHUD=", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGOHUD=!" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGOHUD=!", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGOHUD=" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGOHUD=", enabled: true, modified: true }
+0 SixtyConfigOption { enabled: true, modified: true, placeholder: "%mangohud%", replace_with: "MANGOHUD=1" }
+0 ConfigOption { placeholder: "%mangohud%", replace_with: "MANGOHUD=1", enabled: true, modified: true }
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS32): ignored.
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS32): ignored.
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS32): ignored.
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_64/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS64): ignored.
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS32): ignored.
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS32): ignored.
+ERROR: ld.so: object '/home/kirottu/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' from LD_PRELOAD cannot be preloaded (wrong ELF class: ELFCLASS32): ignored.
+pid 44613 != 44610, skipping destruction (fork without exec?)
+[34mProtonFixes[44870] INFO: Running protonfixes[0m
+[34mProtonFixes[44870] INFO: Running checks[0m
+[34mProtonFixes[44870] INFO: All checks successful[0m
+[34mProtonFixes[44870] INFO: Using global defaults for "BioShock Infinite" (8870)[0m
+[34mProtonFixes[44870] INFO: No protonfix found for "BioShock Infinite" (8870)[0m
+fsync: up and running.
+[obs-vkcapture] Init Vulkan 1.0.1
+[2021-11-20 12:24:42.742] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.config/MangoHud/wine-explorer.conf' [ not found ]
+[2021-11-20 12:24:42.742] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.local/share/Steam/compatibilitytools.d/Proton-6.21-GE-2/files/bin/MangoHud.conf' [ not found ]
+[2021-11-20 12:24:42.742] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.config/MangoHud/wine64-preloader.conf' [ not found ]
+[2021-11-20 12:24:42.742] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.config/MangoHud/MangoHud.conf' [ not found ]
+sh: 1: glxinfo: not found
+[obs-vkcapture] Init Vulkan 1.0.1
+[2021-11-20 12:24:42.780] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.config/MangoHud/wine-explorer.conf' [ not found ]
+[2021-11-20 12:24:42.780] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.local/share/Steam/compatibilitytools.d/Proton-6.21-GE-2/files/bin/MangoHud.conf' [ not found ]
+[2021-11-20 12:24:42.780] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.config/MangoHud/wine64-preloader.conf' [ not found ]
+[2021-11-20 12:24:42.780] [MANGOHUD] [info] [config.cpp:114] skipping config: '/home/kirottu/.config/MangoHud/MangoHud.conf' [ not found ]
+sh: 1: glxinfo: not found
+Setting breakpad minidump AppID = 8870
+Steam_SetMinidumpSteamID:  Caching Steam ID:  76561198867919239 [API loaded no]
+CAppInfoCacheReadFromDiskThread took 2 milliseconds to initialize
+[obs-vkcapture] Init Vulkan 1.0.1
+[obs-vkcapture] Injecting VK_KHR_external_memory_fd extension
+[obs-vkcapture] Injecting VK_EXT_image_drm_format_modifier extension
+[obs-vkcapture] DRM format modifier support not available
+[obs-vkcapture] Init Vulkan 1.0.1
+[obs-vkcapture] Injecting VK_KHR_external_memory_fd extension
+[obs-vkcapture] Injecting VK_EXT_image_drm_format_modifier extension
+[obs-vkcapture] DRM format modifier support not available
+[obs-vkcapture] Init Vulkan 1.0.1
+[obs-vkcapture] Injecting VK_KHR_external_memory_fd extension
+[obs-vkcapture] Injecting VK_EXT_image_drm_format_modifier extension
+[obs-vkcapture] DRM format modifier support not available
+[obs-vkcapture] Injecting VK_KHR_external_memory_fd extension
+[obs-vkcapture] Injecting VK_EXT_image_drm_format_modifier extension
+[obs-vkcapture] DRM format modifier support not available
+[obs-vkcapture] Texture VK_FORMAT_B8G8R8A8_UNORM 1920x1080
+[obs-vkcapture] ------------------ vulkan capture started ------------------
+[obs-vkcapture] ------------------- vulkan capture freed -------------------
+[obs-vkcapture] Texture VK_FORMAT_B8G8R8A8_UNORM 1920x1080
+[obs-vkcapture] ------------------ vulkan capture started ------------------
+[obs-vkcapture] ------------------- vulkan capture freed -------------------
+Setting breakpad minidump AppID = 8870
+Steam_SetMinidumpSteamID:  Caching Steam ID:  76561198867919239 [API loaded no]
+pid 44874 != 44873, skipping destruction (fork without exec?)

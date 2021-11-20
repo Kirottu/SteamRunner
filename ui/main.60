@@ -9,8 +9,7 @@ struct SixtyConfigOption := {
 
 
 ButtonBar := Rectangle {
-	callback buttonpressed(int);
-	
+	callback buttonpressed(int);	
 	property <[string]> button_texts;
 
 	background: @linear-gradient(90deg, #5e81ac 0%, #b48ead 100%);
@@ -22,42 +21,90 @@ ButtonBar := Rectangle {
 			padding: 5px;
 			height: parent.height;
 			text: title;
-			clicked => { buttonpressed(ind); }
+			clicked => { root.buttonpressed(ind); }
 		}
 	}
 }
 
 ConfigEdit := Rectangle {
 	callback buttonpressed(int);
+	callback sync_value(int, SixtyConfigOption);
+	callback sync_placeholder_string(string, bool);
 
+	property <string> placeholder_string;
 	property <[SixtyConfigOption]> config_options;
 	property <bool> enable_merge_button;
+	
+	width: 600px;
+	
+	placeholder_launch_edit := TextInput {
+		height: 30px;
+		text: placeholder_string;
+		edited => {
+			sync_placeholder_string(text, enable_merge_button);
+		}
+	}
 
 	ListView {
-		height: parent.height - button_bar.height;
+		y: placeholder_launch_edit.height;
+		height: parent.height - button_bar.height - placeholder_launch_edit.height;
 		for option[i] in config_options : HorizontalLayout {
+			width: parent.width;
+			property <int> ind: i;
+			property <SixtyConfigOption> config_opt: option;
 			alignment: end;
-			Text {
-				
-				text: option.placeholder + " " + option.replace_with;
-				horizontal-alignment: TextHorizontalAlignment.left;
-			}
-			button := Button {
-				text: "Edit";
-				clicked => {}
+			VerticalLayout {
+				height: 50px;
+				HorizontalLayout {
+					width: 600px - checkbox.width;
+					Text {
+						text: "Placeholder string:";
+					}
+					TextInput {
+						horizontal-alignment: TextHorizontalAlignment.left;
+						single-line: true;
+						wrap: TextWrap.word-wrap;
+						text: option.placeholder;
+						edited => {
+							config_opt.placeholder = text;
+							config_opt.modified = true;
+							root.sync_value(ind, config_opt);
+						}
+					}
+				}
+				HorizontalLayout {
+					Text {
+						text: "Replace With string:";
+					}
+					TextInput {
+						horizontal-alignment: TextHorizontalAlignment.left;
+						single-line: true;
+						wrap: TextWrap.word-wrap;
+						text: option.replace_with;
+						edited => {
+							config_opt.replace_with = text;
+							config_opt.modified = true;
+							root.sync_value(ind, config_opt);
+						}
+					}
+				}
 			}
 			checkbox := CheckBox {
+				width: 50px;
 				checked: option.enabled; 
-				toggled => {}
+				toggled => { 
+					config_opt.enabled = !config_opt.enabled;
+					root.sync_value(ind, config_opt);
+				}
 			}
 		}
 	}
 
 	button_bar := ButtonBar {
-		button_texts: ["Back", "Save", "Merge Global Config"];
+		button_texts: enable_merge_button ? ["Add Item", "Back", "Save", "Merge Global Config"] : ["Add Item", "Back", "Save"];
 		y: parent.height - height;
 
-		buttonpressed(index) => { buttonpressed(index); }
+		buttonpressed(index) => { root.buttonpressed(index); }
 	}
 }
 
@@ -68,28 +115,23 @@ Main := Window {
 	
 	callback quit();
 	
-	callback edit_global_config();
-	callback edit_game_config();
-	callback save_global_config();
-	callback save_game_config();
+	callback save_config(bool);
 	
+	callback merge_global_into_game();
+	callback sync_config_opt(int, SixtyConfigOption, bool);
+	callback add_item(bool);
+	callback sync_placeholder_string(string, bool);
+
 	callback print_val(int);
 
 	property <image> banner;
 	property <string> appid;
 	property <bool> launch_cancelled: true;
 
-	property <[SixtyConfigOption]> game_config_options;
-	property <[SixtyConfigOption]> global_config_options;
-	
-	edit_game_config() => {
-		startup_layout.visible = false;
-		game_config_layout.visible = true;
-	}
-
-	edit_global_config() => {
-		startup_layout.visible = false;
-	}
+	property <[SixtyConfigOption]> game_config_options <=> game_config_layout.config_options;
+	property <[SixtyConfigOption]> global_config_options <=> global_config_layout.config_options;
+	property <string> game_launch_placeholder <=> game_config_layout.placeholder_string;
+	property <string> global_launch_placeholder <=> global_config_layout.placeholder_string;
 
 	// The first layout you see when the software starts up
 	startup_layout := Rectangle {
@@ -127,14 +169,20 @@ Main := Window {
 					padding: 5px;
 					height: parent.height;
 					text: "Game Config";
-					clicked => { root.edit_game_config(); }
+					clicked => { 
+						startup_layout.visible = false;
+						game_config_layout.visible = true;
+					}
 				}
 				Button {
 					width: 100px;
 					padding: 5px;
 					height: parent.height;
 					text: "Global Config";
-					clicked => { root.edit_global_config(); }
+					clicked => { 
+						startup_layout.visible = false;
+						global_config_layout.visible = true;
+					}
 				}
 				Button {
 					width: 100px;
@@ -148,15 +196,55 @@ Main := Window {
 	}
 	game_config_layout := ConfigEdit {
 		visible: false;
-		config_options: game_config_options;
 		enable_merge_button: true;
 
 		buttonpressed(index) => {
 			if (index == 0) {
+				root.add_item(true);
+			}
+			if (index == 1) {
 				game_config_layout.visible = false;
 				startup_layout.visible = true;
 			}
-			print_val(index);
+			if (index == 2) {
+				root.save_config(true);
+			}
+			if (index == 3) {
+				root.merge_global_into_game();
+			}
+		}
+
+		sync_placeholder_string(text, is_game_config) => {
+			root.sync_placeholder_string(text, is_game_config);
+		}
+
+		sync_value(index, config_opt) => {
+			root.sync_config_opt(index, config_opt, true);
+		}
+	}
+	global_config_layout := ConfigEdit {
+		visible: false;
+		enable_merge_button: false;
+
+		buttonpressed(index) => {
+			if (index == 0) {
+				root.add_item(false);
+			}
+			if (index == 1) {
+				global_config_layout.visible = false;
+				startup_layout.visible = true;
+			}
+			if (index == 2) {
+				root.save_config(false);
+			}
+		}
+		
+		sync_placeholder_string(text, is_game_config) => {
+			root.sync_placeholder_string(text, is_game_config);
+		}
+
+		sync_value(index, config_opt) => {
+			root.sync_config_opt(index, config_opt, false);
 		}
 	}
 }

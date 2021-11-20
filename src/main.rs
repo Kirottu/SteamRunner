@@ -7,7 +7,27 @@ use std::{
     env, fs,
     path::Path,
     process::{exit, Command},
+    sync::{Arc, Mutex},
 };
+
+// The game and global config variables need to be defined like this to allow their usage in the ui
+// code callbacks
+lazy_static::lazy_static! {
+    pub static ref GAME_CONFIG: Arc<Mutex<GameConfig>> = Arc::new(Mutex::new(
+            GameConfig {
+                appid: 0,
+                placeholder_launch_command: "".to_string(),
+                launch_command_modified: false,
+                placeholder_map: Vec::new()
+            }));
+    pub static ref GLOBAL_CONFIG: Arc<Mutex<GameConfig>> = Arc::new(Mutex::new(
+            GameConfig {
+                appid: 0,
+                placeholder_launch_command: "".to_string(),
+                launch_command_modified: false,
+                placeholder_map: Vec::new()
+            }));
+}
 
 fn main() {
     let matches = App::new("SteamTinkerLaunch-rs")
@@ -42,58 +62,75 @@ fn main() {
 
     // Load global config from the file if it exists, and fall back to a statically defined version
     // if the file does not exist
-    let mut global_config = if Path::new(&format!("{}/global_config.yaml", config_dir)).exists() {
-        GameConfig::load(&format!("{}/global_config.yaml", config_dir))
-    } else {
-        let global_config = GameConfig {
-            placeholder_launch_command: "%mangohud%%obs-vkcapture%%obs-glcapture% %command%"
-                .to_string(),
-            launch_command_modified: false,
-            placeholder_map: vec![
-                ConfigOption::new(
-                    &"%mangohud%".to_string(),
-                    &"mangohud ".to_string(),
-                    false,
-                    false,
-                ),
-                ConfigOption::new(
-                    &"%obs-vkcapture%".to_string(),
-                    &"obs-vkcapture ".to_string(),
-                    false,
-                    false,
-                ),
-                ConfigOption::new(
-                    &"%obs-glcapture%".to_string(),
-                    &"obs-glcapture ".to_string(),
-                    false,
-                    false,
-                ),
-            ],
-        };
+    *GLOBAL_CONFIG.lock().unwrap() =
+        if Path::new(&format!("{}/global_config.yaml", config_dir)).exists() {
+            GameConfig::load(&format!("{}/global_config.yaml", config_dir))
+        } else {
+            let global_config = GameConfig {
+                appid: 0,
+                placeholder_launch_command: "%mangohud% %obs-vkcapture% %obs-glcapture% %command%"
+                    .to_string(),
+                launch_command_modified: false,
+                placeholder_map: vec![
+                    ConfigOption::new(
+                        &"%mangohud%".to_string(),
+                        &"mangohud ".to_string(),
+                        false,
+                        false,
+                    ),
+                    ConfigOption::new(
+                        &"%obs-vkcapture%".to_string(),
+                        &"obs-vkcapture ".to_string(),
+                        false,
+                        false,
+                    ),
+                    ConfigOption::new(
+                        &"%obs-glcapture%".to_string(),
+                        &"obs-glcapture ".to_string(),
+                        false,
+                        false,
+                    ),
+                ],
+            };
 
-        // Save the newly created config file
-        global_config.save(&format!("{}/global_config.yaml", config_dir));
-        global_config
-    };
+            // Save the newly created config file
+            global_config.save(&format!("{}/global_config.yaml", config_dir));
+            global_config
+        };
 
     // Game specific config file
     // Load the file if it exists, otherwise create it and then return the global config
-    let mut game_config =
+    *GAME_CONFIG.lock().unwrap() =
         if Path::new(&format!("{}/game_configs/{}.yaml", config_dir, appid)).exists() {
             GameConfig::load(&format!("{}/game_configs/{}.yaml", config_dir, appid))
         } else {
-            create_new_game_config(&config_dir, &global_config, appid)
+            let mut game_config = GLOBAL_CONFIG.lock().unwrap();
+            game_config.appid = appid;
+            create_new_game_config(&config_dir, &game_config, appid)
         };
 
-    if ui::run(&mut global_config, &mut game_config, appid) {
+    if ui::run(&GLOBAL_CONFIG, &GAME_CONFIG) {
         exit(1);
     }
 
-    /*Command::new("sh")
-    .arg("-c")
-    .arg(game_config.get_launch_command(&command.to_string()))
-    .spawn()
-    .unwrap();*/
+    println!(
+        "{}",
+        GAME_CONFIG
+            .lock()
+            .unwrap()
+            .get_launch_command(&command.to_string())
+    );
+
+    Command::new("sh")
+        .arg("-c")
+        .arg(
+            GAME_CONFIG
+                .lock()
+                .unwrap()
+                .get_launch_command(&command.to_string()),
+        )
+        .spawn()
+        .unwrap();
 }
 
 fn create_config_dirs(config_dir: &String) {
