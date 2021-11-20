@@ -68,24 +68,18 @@ fn main() {
         } else {
             let global_config = GameConfig {
                 appid: 0,
-                placeholder_launch_command: "%mangohud% %obs-vkcapture% %obs-glcapture% %command%"
-                    .to_string(),
+                placeholder_launch_command: "%mh% %ov% %og% %command%".to_string(),
                 launch_command_modified: false,
                 placeholder_map: vec![
+                    ConfigOption::new(&"%mh%".to_string(), &"mangohud ".to_string(), false, false),
                     ConfigOption::new(
-                        &"%mangohud%".to_string(),
-                        &"mangohud ".to_string(),
-                        false,
-                        false,
-                    ),
-                    ConfigOption::new(
-                        &"%obs-vkcapture%".to_string(),
+                        &"%ov%".to_string(),
                         &"obs-vkcapture ".to_string(),
                         false,
                         false,
                     ),
                     ConfigOption::new(
-                        &"%obs-glcapture%".to_string(),
+                        &"%og%".to_string(),
                         &"obs-glcapture ".to_string(),
                         false,
                         false,
@@ -130,6 +124,8 @@ fn main() {
                 .get_launch_command(&command.to_string()),
         )
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 }
 

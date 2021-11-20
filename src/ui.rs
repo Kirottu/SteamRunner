@@ -44,6 +44,7 @@ pub fn run(
         env::var("HOME").unwrap(),
         game_config.lock().unwrap().appid,
     );
+    let logo_path = format!("{}/.local/share/Steam/appcache/librarycache/{}_logo.png", env::var("HOME").unwrap())
     let banner = sixtyfps::Image::load_from_path(Path::new(&banner_path)).unwrap();
 
     main_window.set_banner(banner);
