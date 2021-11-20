@@ -97,6 +97,7 @@ Main := Window {
 	callback print_val(int);
 
 	property <image> banner;
+	property <image> logo;
 	property <string> appid;
 	property <bool> launch_cancelled: true;
 
@@ -111,8 +112,19 @@ Main := Window {
 			title: "Start Menu";
 			startup_layout := Rectangle {
 				Image {
+					image-fit: cover;
 					source: banner;
 					height: parent.height;
+					width: 400px;
+					Image {
+						source: logo;
+						width: 200px;
+					}
+				}
+				Rectangle {
+					x: 300px;
+					width: 100px;
+					background: @linear-gradient(90deg, #00000000 0%, parent.background 100%);
 				}
 				/*HorizontalLayout {
 					alignment: start;
