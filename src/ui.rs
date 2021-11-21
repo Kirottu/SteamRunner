@@ -209,7 +209,8 @@ pub fn run(
     main_window.on_sync_config_cmd(
         closure!(clone game_config, clone global_config, | index: i32,
         command: SixtyConfigCommand,
-        is_game_config: bool, is_pre_launch: bool | {
+        is_pre_launch: bool, 
+        is_game_config: bool | {
             let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
             if is_pre_launch {
                 config.pre_launch_commands[index as usize] = command.into();
@@ -247,6 +248,16 @@ pub fn run(
         let main_window = main_window_weak.unwrap();
         let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
         config.placeholder_map.remove(index as usize);
+        config.set_on_sixtyfps(&main_window, is_game_config);
+    }));
+    main_window.on_remove_config_cmd(closure!(clone main_window_weak, clone game_config, clone global_config, |index: i32, is_pre_launch: bool, is_game_config: bool| {
+        let main_window = main_window_weak.unwrap();
+        let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
+        if is_pre_launch {
+            config.pre_launch_commands.remove(index as usize);
+        } else {
+            config.post_exit_commands.remove(index as usize);
+        }
         config.set_on_sixtyfps(&main_window, is_game_config);
     }));
 

@@ -39,7 +39,12 @@ Main := Window {
 	// The first layout you see when the software starts up
 		Tab {
 			title: "Start Menu";
-			startup_layout := Rectangle {
+			startup_layout := FocusScope {
+				has-focus: false;
+				key-pressed(event) => {
+					debug(event.text);
+					accept
+				}
 				Image {
 					image-fit: cover;
 					source: banner;
@@ -107,7 +112,7 @@ Main := Window {
 				
 				// Sync a pre-launch or post-exit command to global or game config with an index
 				sync_config_cmd(index, config_opt, is_pre_launch) => {
-					root.sync_config_cmd(index, config_opt, true, is_pre_launch);
+					root.sync_config_cmd(index, config_opt, is_pre_launch, true);
 				}
 				
 				// Remove specific config option from global or game config with an index
@@ -117,7 +122,7 @@ Main := Window {
 
 				// Remove specific pre-launch or post-exit command from global or game config with an index
 				remove_config_cmd(index, is_pre_launch) => {
-					root.remove_config_cmd(index, true, is_pre_launch);
+					root.remove_config_cmd(index, is_pre_launch, true);
 				}
 			}
 		}
@@ -155,7 +160,7 @@ Main := Window {
 				
 				// Sync a pre-launch or post-exit command to global or game config with an index
 				sync_config_cmd(index, config_opt, is_pre_launch) => {
-					root.sync_config_cmd(index, config_opt, false, is_pre_launch);
+					root.sync_config_cmd(index, config_opt, is_pre_launch, false);
 				}
 
 				// Remove specific config option from global or game config with an index
@@ -165,7 +170,7 @@ Main := Window {
 				
 				// Remove specific pre-launch or post-exit command from global or game config with an index
 				remove_config_cmd(index, is_pre_launch) => {
-					root.remove_config_cmd(index, false, is_pre_launch);
+					root.remove_config_cmd(index, is_pre_launch, false);
 				}
 			}
 		}
