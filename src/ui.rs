@@ -238,23 +238,25 @@ pub fn run(
         let main_window = main_window_weak.unwrap();
         let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
         config.placeholder_map.push(ConfigOption::default());
-        config.set_on_sixtyfps(&main_window, true);
+        config.set_on_sixtyfps(&main_window, is_game_config);
     }));
 
-    main_window.on_add_config_cmd(closure!(clone game_config, clone global_config, |is_pre_launch: bool, is_game_config: bool| {
+    main_window.on_add_config_cmd(closure!(clone main_window_weak, clone game_config, clone global_config, |is_pre_launch: bool, is_game_config: bool| {
+        let main_window = main_window_weak.unwrap();
         let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
         if is_pre_launch {
             config.pre_launch_commands.push(ConfigCommand::default());
         } else {
             config.post_exit_commands.push(ConfigCommand::default());
         }
+        config.set_on_sixtyfps(&main_window, is_game_config);
     }));
 
     main_window.on_remove_config_opt(closure!(clone main_window_weak, clone game_config, clone global_config, |index: i32, is_game_config: bool| {
         let main_window = main_window_weak.unwrap();
         let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
         config.placeholder_map.remove(index as usize);
-        config.set_on_sixtyfps(&main_window, true);
+        config.set_on_sixtyfps(&main_window, is_game_config);
     }));
 
     main_window.on_merge_global_into_game(

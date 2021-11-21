@@ -4,7 +4,6 @@ mod ui;
 use clap::{App, Arg};
 use game_config::{ConfigOption, GameConfig};
 use notify_rust::Notification;
-use std::collections::HashMap;
 use std::process::Child;
 use std::{
     env, fs,
