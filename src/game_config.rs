@@ -3,7 +3,7 @@ use std::{fs::File, io::Write};
 use serde::{Deserialize, Serialize};
 
 // Struct to contain the values for one specific option
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct ConfigOption {
     pub placeholder: String,
     pub replace_with: String,
@@ -22,13 +22,22 @@ impl ConfigOption {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct ConfigCommand {
+    pub command: String,
+    pub enabled: bool,
+    pub modified: bool,
+}
+
 // Entire struct to contain all ConfigOptions for the game specific config or the global config
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct GameConfig {
     pub appid: u32,
     pub placeholder_launch_command: String,
     pub launch_command_modified: bool,
     pub placeholder_map: Vec<ConfigOption>,
+    pub pre_launch_commands: Vec<ConfigCommand>,
+    pub post_exit_commands: Vec<ConfigCommand>,
 }
 
 impl GameConfig {
@@ -87,14 +96,39 @@ impl GameConfig {
             .iter()
             .map(|option| (*option).clone().into())
             .collect();
+
+        let pre_launch_commands: Vec<crate::ui::SixtyConfigCommand> = self
+            .pre_launch_commands
+            .iter()
+            .map(|command| (*command).clone().into())
+            .collect();
+
+        let post_exit_commands: Vec<crate::ui::SixtyConfigCommand> = self
+            .post_exit_commands
+            .iter()
+            .map(|command| (*command).clone().into())
+            .collect();
+
         if is_game_config {
             main_window.set_game_config_options(sixtyfps::ModelHandle::new(std::rc::Rc::new(
                 sixtyfps::VecModel::from(config_options),
+            )));
+            main_window.set_game_pre_launch_commands(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+                sixtyfps::VecModel::from(pre_launch_commands),
+            )));
+            main_window.set_game_post_exit_commands(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+                sixtyfps::VecModel::from(post_exit_commands),
             )));
         } else {
             main_window.set_global_config_options(sixtyfps::ModelHandle::new(std::rc::Rc::new(
                 sixtyfps::VecModel::from(config_options),
             )));
+            main_window.set_global_pre_launch_commands(sixtyfps::ModelHandle::new(
+                std::rc::Rc::new(sixtyfps::VecModel::from(pre_launch_commands)),
+            ));
+            main_window.set_global_post_exit_commands(sixtyfps::ModelHandle::new(
+                std::rc::Rc::new(sixtyfps::VecModel::from(post_exit_commands)),
+            ));
         }
     }
 }

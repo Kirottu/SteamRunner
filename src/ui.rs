@@ -6,9 +6,12 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use crate::{
+    game_config::{ConfigCommand, ConfigOption},
+    GameConfig,
+};
+use closure::closure;
 use sixtyfps::SharedString;
-
-use crate::{game_config::ConfigOption, GameConfig};
 
 impl From<ConfigOption> for sixtyfps_generated_Main::SixtyConfigOption {
     fn from(config: ConfigOption) -> Self {
@@ -32,12 +35,32 @@ impl From<SixtyConfigOption> for ConfigOption {
     }
 }
 
+impl From<ConfigCommand> for sixtyfps_generated_Main::SixtyConfigCommand {
+    fn from(command: ConfigCommand) -> Self {
+        Self {
+            command: SharedString::from(command.command),
+            enabled: command.enabled,
+            modified: command.modified,
+        }
+    }
+}
+
+impl From<SixtyConfigCommand> for ConfigCommand {
+    fn from(command: SixtyConfigCommand) -> Self {
+        Self {
+            command: command.command.into(),
+            enabled: command.enabled,
+            modified: command.modified,
+        }
+    }
+}
+
 pub fn run(
     global_config: &'static Arc<Mutex<GameConfig>>,
     game_config: &'static Arc<Mutex<GameConfig>>,
 ) -> bool {
     let main_window = Main::new();
-
+    let main_window_weak = main_window.as_weak();
     // Load the banner image from steam library cache
     let banner_path = format!(
         "{}/.local/share/Steam/appcache/librarycache/{}_library_hero.jpg",
@@ -91,6 +114,53 @@ pub fn run(
         .map(|option| (*option).clone().into())
         .collect();
 
+    let game_pre_launch_commands: Vec<sixtyfps_generated_Main::SixtyConfigCommand> = game_config
+        .lock()
+        .unwrap()
+        .pre_launch_commands
+        .iter()
+        .map(|command| (*command).clone().into())
+        .collect();
+
+    let game_post_exit_commands: Vec<sixtyfps_generated_Main::SixtyConfigCommand> = game_config
+        .lock()
+        .unwrap()
+        .post_exit_commands
+        .iter()
+        .map(|command| (*command).clone().into())
+        .collect();
+
+    let global_pre_launch_commands: Vec<sixtyfps_generated_Main::SixtyConfigCommand> =
+        global_config
+            .lock()
+            .unwrap()
+            .pre_launch_commands
+            .iter()
+            .map(|command| (*command).clone().into())
+            .collect();
+
+    let global_post_exit_commands: Vec<sixtyfps_generated_Main::SixtyConfigCommand> = global_config
+        .lock()
+        .unwrap()
+        .post_exit_commands
+        .iter()
+        .map(|command| (*command).clone().into())
+        .collect();
+
+    main_window.set_global_pre_launch_commands(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+        sixtyfps::VecModel::from(global_pre_launch_commands),
+    )));
+    main_window.set_global_post_exit_commands(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+        sixtyfps::VecModel::from(global_post_exit_commands),
+    )));
+
+    main_window.set_game_pre_launch_commands(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+        sixtyfps::VecModel::from(game_pre_launch_commands),
+    )));
+    main_window.set_game_post_exit_commands(sixtyfps::ModelHandle::new(std::rc::Rc::new(
+        sixtyfps::VecModel::from(game_post_exit_commands),
+    )));
+
     main_window.set_game_config_options(sixtyfps::ModelHandle::new(std::rc::Rc::new(
         sixtyfps::VecModel::from(game_config_options),
     )));
@@ -109,113 +179,94 @@ pub fn run(
     });
 
     // Clones of the Arcs for the config structs.
-    let on_save_global_config_lock = Arc::clone(&global_config);
-    let on_save_game_config_lock = Arc::clone(&game_config);
     main_window.on_save_config(move |is_game_config: bool| {
-        if is_game_config {
-            let game_config = on_save_game_config_lock.lock().unwrap();
-            game_config.save(&format!(
-                "{}/.config/stl-rs/game_configs/{}.yaml",
-                env::var("HOME").unwrap(),
-                game_config.appid
-            ));
-            println!("Saved game config");
+        let (config, save_path) = if is_game_config {
+            let game_config = game_config.lock().unwrap();
+            let appid = game_config.appid;
+            (
+                game_config,
+                format!(
+                    "{}/.config/stl-rs/game_configs/{}.yaml",
+                    env::var("HOME").unwrap(),
+                    appid
+                ),
+            )
         } else {
-            let global_config = on_save_global_config_lock.lock().unwrap();
-            global_config.save(&format!(
-                "{}/.config/stl-rs/global_config.yaml",
-                env::var("HOME").unwrap()
-            ));
-            println!("Saved global config");
-        }
+            (
+                global_config.lock().unwrap(),
+                format!(
+                    "{}/.config/stl-rs/global_config.yaml",
+                    env::var("HOME").unwrap()
+                ),
+            )
+        };
+        config.save(&save_path);
     });
 
     // Clones of the Arcs for the config structs.
-    let on_sync_global_config_opt_lock = Arc::clone(&global_config);
-    let on_sync_game_config_opt_lock = Arc::clone(&game_config);
     main_window.on_sync_config_opt(
         move |index: i32, config_opt: SixtyConfigOption, is_game_config: bool| {
-            if is_game_config {
-                let mut game_config = on_sync_game_config_opt_lock.lock().unwrap();
-                game_config.placeholder_map[index as usize] = config_opt.clone().into();
-                println!("{} {:?}", index, config_opt);
-                println!(
-                    "{} {:?}",
-                    index, game_config.placeholder_map[index as usize]
-                );
+            let mut config = if is_game_config {
+                game_config.lock().unwrap()
             } else {
-                let mut global_config = on_sync_global_config_opt_lock.lock().unwrap();
-                global_config.placeholder_map[index as usize] = config_opt.clone().into();
-                println!("{} {:?}", index, config_opt);
-                println!(
-                    "{} {:?}",
-                    index, global_config.placeholder_map[index as usize]
-                );
-            }
+                global_config.lock().unwrap()
+            };
+            config.placeholder_map[index as usize] = config_opt.clone().into();
         },
     );
 
-    let on_sync_placeholder_global_lock = Arc::clone(&global_config);
-    let on_sync_placeholder_game_lock = Arc::clone(&game_config);
-    main_window.on_sync_placeholder_string(move |text: SharedString, is_game_config: bool| {
-        if is_game_config {
-            on_sync_placeholder_game_lock
-                .lock()
-                .unwrap()
-                .placeholder_launch_command = text.into();
-            on_sync_placeholder_game_lock
-                .lock()
-                .unwrap()
-                .launch_command_modified = true;
-        } else {
-            on_sync_placeholder_global_lock
-                .lock()
-                .unwrap()
-                .placeholder_launch_command = text.into();
-            on_sync_placeholder_global_lock
-                .lock()
-                .unwrap()
-                .launch_command_modified = true;
-        }
-    });
+    main_window.on_sync_config_cmd(
+        closure!(clone game_config, clone global_config, | index: i32,
+        command: SixtyConfigCommand,
+        is_game_config: bool, is_pre_launch: bool | {
+            let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
+            if is_pre_launch {
+                config.pre_launch_commands[index as usize] = command.into();
+            } else {
+                config.post_exit_commands[index as usize] = command.into();
+            }
+        }),
+    );
 
-    let on_add_item_main_window_weak = main_window.as_weak();
-    let on_global_add_item_lock = Arc::clone(&global_config);
-    let on_game_add_item_lock = Arc::clone(&game_config);
-    main_window.on_add_item(move |is_game_config: bool| {
-        let main_window = on_add_item_main_window_weak.unwrap();
-        if is_game_config {
-            let mut game_config = on_game_add_item_lock.lock().unwrap();
-            game_config.placeholder_map.push(ConfigOption::new(
-                &"".to_string(),
-                &"".to_string(),
-                false,
-                false,
-            ));
+    main_window.on_sync_placeholder_string(closure!(clone game_config, clone global_config, |text: SharedString, is_game_config: bool| {
+        let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
+        config.placeholder_launch_command = text.into();
+        config.launch_command_modified = true;
+    }));
+
+    main_window.on_add_config_opt(closure!(clone main_window_weak, clone game_config, clone global_config, |is_game_config: bool| {
+        let main_window = main_window_weak.unwrap();
+        let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
+        config.placeholder_map.push(ConfigOption::default());
+        config.set_on_sixtyfps(&main_window, true);
+    }));
+
+    main_window.on_add_config_cmd(closure!(clone game_config, clone global_config, |is_pre_launch: bool, is_game_config: bool| {
+        let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
+        if is_pre_launch {
+            config.pre_launch_commands.push(ConfigCommand::default());
+        } else {
+            config.post_exit_commands.push(ConfigCommand::default());
+        }
+    }));
+
+    main_window.on_remove_config_opt(closure!(clone main_window_weak, clone game_config, clone global_config, |index: i32, is_game_config: bool| {
+        let main_window = main_window_weak.unwrap();
+        let mut config = if is_game_config { game_config.lock().unwrap() } else { global_config.lock().unwrap() };
+        config.placeholder_map.remove(index as usize);
+        config.set_on_sixtyfps(&main_window, true);
+    }));
+
+    main_window.on_merge_global_into_game(
+        closure!(clone main_window_weak, clone game_config, clone global_config, || {
+            let mut game_config = game_config.lock().unwrap();
+            let global_config = global_config.lock().unwrap();
+            let main_window = main_window_weak.unwrap();
+
+            game_config.merge_with(&global_config);
             game_config.set_on_sixtyfps(&main_window, true);
-        } else {
-            let mut global_config = on_global_add_item_lock.lock().unwrap();
-            global_config.placeholder_map.push(ConfigOption::new(
-                &"".to_string(),
-                &"".to_string(),
-                false,
-                false,
-            ));
-            global_config.set_on_sixtyfps(&main_window, false);
-        }
-    });
-
-    let on_merge_items_main_window_weak = main_window.as_weak();
-    let on_merge_items_global_lock = Arc::clone(&global_config);
-    let on_merge_items_game_lock = Arc::clone(&game_config);
-    main_window.on_merge_global_into_game(move || {
-        let mut game_config = on_merge_items_game_lock.lock().unwrap();
-        let global_config = on_merge_items_global_lock.lock().unwrap();
-        let main_window = on_merge_items_main_window_weak.unwrap();
-
-        game_config.merge_with(&global_config);
-        game_config.set_on_sixtyfps(&main_window, true);
-    });
+        }),
+    );
 
     main_window.run();
 

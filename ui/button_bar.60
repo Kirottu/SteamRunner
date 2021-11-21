@@ -1,0 +1,17 @@
+import { HorizontalBox, Button } from "sixtyfps_widgets.60";
+
+export ButtonBar := Rectangle {
+	callback buttonpressed(int);	
+	property <[string]> button_texts;
+
+	background: @linear-gradient(90deg, #5e81ac 0%, #b48ead 100%);
+	height: 40px;
+	HorizontalBox {
+		alignment: end;
+		for title[i] in button_texts : Button {
+			property <int> ind: i;
+			text: title;
+			clicked => { root.buttonpressed(ind); }
+		}
+	}
+}

@@ -3,6 +3,9 @@ mod ui;
 
 use clap::{App, Arg};
 use game_config::{ConfigOption, GameConfig};
+use notify_rust::Notification;
+use std::collections::HashMap;
+use std::process::Child;
 use std::{
     env, fs,
     path::Path,
@@ -13,20 +16,8 @@ use std::{
 // The game and global config variables need to be defined like this to allow their usage in the ui
 // code callbacks
 lazy_static::lazy_static! {
-    pub static ref GAME_CONFIG: Arc<Mutex<GameConfig>> = Arc::new(Mutex::new(
-            GameConfig {
-                appid: 0,
-                placeholder_launch_command: "".to_string(),
-                launch_command_modified: false,
-                placeholder_map: Vec::new()
-            }));
-    pub static ref GLOBAL_CONFIG: Arc<Mutex<GameConfig>> = Arc::new(Mutex::new(
-            GameConfig {
-                appid: 0,
-                placeholder_launch_command: "".to_string(),
-                launch_command_modified: false,
-                placeholder_map: Vec::new()
-            }));
+    pub static ref GAME_CONFIG: Arc<Mutex<GameConfig>> = Arc::new(Mutex::new(GameConfig::default()));
+    pub static ref GLOBAL_CONFIG: Arc<Mutex<GameConfig>> = Arc::new(Mutex::new(GameConfig::default()));
 }
 
 fn main() {
@@ -85,6 +76,8 @@ fn main() {
                         false,
                     ),
                 ],
+                pre_launch_commands: Vec::new(),
+                post_exit_commands: Vec::new(),
             };
 
             // Save the newly created config file
@@ -107,26 +100,73 @@ fn main() {
         exit(1);
     }
 
-    println!(
-        "{}",
-        GAME_CONFIG
-            .lock()
-            .unwrap()
-            .get_launch_command(&command.to_string())
-    );
+    let game_config = GAME_CONFIG.lock().unwrap();
 
-    Command::new("sh")
+    // Run all pre launch commands and wait for them to exit before starting game.
+    for command in &game_config.pre_launch_commands {
+        if command.enabled {
+            let mut handle = match Command::new("sh").arg("-c").arg(&command.command).spawn() {
+                Ok(handle) => handle,
+                Err(why) => {
+                    Notification::new()
+                        .summary("Failed to run pre-launch command")
+                        .body(&format!(
+                            "Failed to run command {}: {}",
+                            &command.command, why
+                        ))
+                        .icon("notification_error")
+                        .show()
+                        .unwrap();
+                    continue;
+                }
+            };
+            handle.wait().unwrap();
+        }
+    }
+
+    // Start the game and wait until it exits
+    let handle: Option<Child> = match Command::new("sh")
         .arg("-c")
-        .arg(
-            GAME_CONFIG
-                .lock()
-                .unwrap()
-                .get_launch_command(&command.to_string()),
-        )
+        .arg(game_config.get_launch_command(&command.to_string()))
         .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
+    {
+        Ok(handle) => Some(handle),
+        Err(why) => {
+            Notification::new()
+                .summary("Failed to run game")
+                .body(&format!("Game startup failed: {}", why))
+                .icon("notification_error")
+                .show()
+                .unwrap();
+            None
+        }
+    };
+
+    // If the game launched successfully, wait until it closes
+    if let Some(mut handle) = handle {
+        handle.wait().unwrap();
+    }
+
+    for command in &game_config.post_exit_commands {
+        if command.enabled {
+            let mut handle = match Command::new("sh").arg("-c").arg(&command.command).spawn() {
+                Ok(handle) => handle,
+                Err(why) => {
+                    Notification::new()
+                        .summary("Failed to run post-exit command")
+                        .body(&format!(
+                            "Failed to run command {}: {}",
+                            &command.command, why
+                        ))
+                        .icon("notification_error")
+                        .show()
+                        .unwrap();
+                    continue;
+                }
+            };
+            handle.wait().unwrap();
+        }
+    }
 }
 
 fn create_config_dirs(config_dir: &String) {

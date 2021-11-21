@@ -1,89 +1,10 @@
-import { Button, ListView, CheckBox, LineEdit, HorizontalBox, TabWidget } from "sixtyfps_widgets.60";
-
-struct SixtyConfigOption := {
-    placeholder: string,
-    replace_with: string,
-    enabled: bool,
-    modified: bool,
-}
-
-
-ButtonBar := Rectangle {
-	callback buttonpressed(int);	
-	property <[string]> button_texts;
-
-	background: @linear-gradient(90deg, #5e81ac 0%, #b48ead 100%);
-	height: 40px;
-	HorizontalBox {
-		alignment: end;
-		for title[i] in button_texts : Button {
-			property <int> ind: i;
-			text: title;
-			clicked => { root.buttonpressed(ind); }
-		}
-	}
-}
-
-ConfigEdit := Rectangle {
-	callback buttonpressed(int);
-	callback sync_value(int, SixtyConfigOption);
-	callback sync_placeholder_string(string, bool);
-
-	property <string> placeholder_string;
-	property <[SixtyConfigOption]> config_options;
-	property <bool> enable_merge_button;
-	
-	width: 600px;
-	
-	placeholder_launch_edit := LineEdit {
-		height: 30px;
-		width: parent.width;
-		text: placeholder_string;
-		placeholder-text: "Enter placeholder string here";
-		edited => {
-			sync_placeholder_string(text, enable_merge_button);
-		}
-	}
-
-	ListView {
-		y: placeholder_launch_edit.height;
-		height: parent.height - button_bar.height - placeholder_launch_edit.height;
-		for option[i] in config_options : HorizontalBox {
-			width: parent.width;
-			property <int> ind: i;
-			property <SixtyConfigOption> config_opt: option;
-			alignment: stretch;
-			LineEdit {
-				text: config_opt.placeholder;
-				placeholder-text: "Insert placeholder text here";
-			}
-			LineEdit {
-				text: config_opt.replace_with;
-				placeholder-text: "Insert text to replace placeholder with here";
-			}
-			checkbox := CheckBox {
-				width: 50px;
-				checked: option.enabled; 
-				toggled => { 
-					config_opt.enabled = !config_opt.enabled;
-					root.sync_value(ind, config_opt);
-				}
-			}
-		}
-	}
-
-	button_bar := ButtonBar {
-		button_texts: enable_merge_button ? ["Add Item", "Back", "Save", "Merge Global Config"] : ["Add Item", "Back", "Save"];
-		y: parent.height - height;
-
-		buttonpressed(index) => { root.buttonpressed(index); }
-	}
-}
+import { StyleMetrics, Button, ListView, CheckBox, LineEdit, HorizontalBox, VerticalBox, TabWidget } from "sixtyfps_widgets.60";
+import { ConfigEdit, SixtyConfigOption, SixtyConfigCommand } from "config_edit.60";
 
 Main := Window {
 	title: "SteamTinkerLaunch-rs";
 	height: 400px;
-	width: 600px;
+	width: 800px;
 	
 	callback quit();
 	
@@ -91,7 +12,11 @@ Main := Window {
 	
 	callback merge_global_into_game();
 	callback sync_config_opt(int, SixtyConfigOption, bool);
-	callback add_item(bool);
+	callback sync_config_cmd(int, SixtyConfigCommand, bool, bool);
+	callback remove_config_opt(int, bool);
+	callback remove_config_cmd(int, bool, bool);
+	callback add_config_opt(bool);
+	callback add_config_cmd(bool, bool);
 	callback sync_placeholder_string(string, bool);
 
 	callback print_val(int);
@@ -100,7 +25,11 @@ Main := Window {
 	property <image> logo;
 	property <string> appid;
 	property <bool> launch_cancelled: true;
-
+	
+	property <[SixtyConfigCommand]> game_pre_launch_commands <=> game_config_layout.pre_launch_commands; 
+	property <[SixtyConfigCommand]> game_post_exit_commands <=> game_config_layout.post_exit_commands; 
+	property <[SixtyConfigCommand]> global_pre_launch_commands <=> global_config_layout.pre_launch_commands; 
+	property <[SixtyConfigCommand]> global_post_exit_commands <=> global_config_layout.post_exit_commands; 
 	property <[SixtyConfigOption]> game_config_options <=> game_config_layout.config_options;
 	property <[SixtyConfigOption]> global_config_options <=> global_config_layout.config_options;
 	property <string> game_launch_placeholder <=> game_config_layout.placeholder_string;
@@ -115,81 +44,80 @@ Main := Window {
 					image-fit: cover;
 					source: banner;
 					height: parent.height;
-					width: 400px;
+					width: 600px;
+					source-clip-x: 200;
 					Image {
 						source: logo;
 						width: 200px;
 					}
 				}
-				Rectangle {
-					x: 300px;
-					width: 100px;
-					background: @linear-gradient(90deg, #00000000 0%, parent.background 100%);
+				VerticalBox {
+					width: 190px;
+					x: parent.width - width;
+					alignment: end;
+					Button {
+						width: 180px;
+						height: 60px;
+						text: "Cancel Launch";
+						clicked => { launch_cancelled = true; root.quit(); }
+					}
+					Button {
+						width: 180px;
+						height: 60px;
+						text: "Start Game";
+						clicked => { launch_cancelled = false; root.quit(); }
+					}
 				}
-				/*HorizontalLayout {
-					alignment: start;
-					padding: 0px;
-					spacing: 5px;
-					Image {
-						image-fit: fill;
-						source: banner;
-						height: root.height;
-						width: banner.width * height / banner.height;
-					}
-					VerticalLayout {
-						Text {
-							text: appid;
-							font-size: 20px;
-						}
-					}
-				}*/
-				/*button_bar := Rectangle {
-					background: @linear-gradient(90deg, #5e81ac 0%, #b48ead 100%);
-					height: 40px;
-					y: parent.height - height;
-					HorizontalBox {
-						alignment: end;
-						Button {
-							width: 100px;
-							text: "Cancel Launch";
-							clicked => { launch_cancelled = true; root.quit(); }
-						}
-						Button {
-							width: 100px;
-							text: "Start Game";
-							clicked => { launch_cancelled = false; root.quit(); }
-						}
-					}
-				}*/
 			}
 		}
 		Tab {
 			title: "Game Config";
 			game_config_layout := ConfigEdit {
 				enable_merge_button: true;
+				width: parent.width;
+				height: parent.height;
 
 				buttonpressed(index) => {
-					if (index == 0) {
-						root.add_item(true);
-					}
-					if (index == 1) {
-						game_config_layout.visible = false;
-						startup_layout.visible = true;
-					}
-					if (index == 2) {
-						root.save_config(true);
-					}
-					if (index == 3) {
+					if (index == 0) { // Merge global into game
 						root.merge_global_into_game();
 					}
+					if (index == 1) { // Add pre-launch command
+						root.add_config_cmd(true, true);
+					}
+					if (index == 2) { // Add post-exit command
+						root.add_config_cmd(false, true);
+					}
+					if (index == 3) { // Add config option
+						root.add_config_opt(true);
+					}
+					if (index == 4) { // Save config
+						root.save_config(true);
+					}
 				}
-
+				
+				// Sync the string with the placeholders to the rust variables
 				sync_placeholder_string(text, is_game_config) => {
 					root.sync_placeholder_string(text, is_game_config);
 				}
-
-				sync_value(index, config_opt) => {
+				
+				// Sync a specific config option to either global or game config with an index
+				sync_config_opt(index, config_opt) => {
 					root.sync_config_opt(index, config_opt, true);
+				}
+				
+				// Sync a pre-launch or post-exit command to global or game config with an index
+				sync_config_cmd(index, config_opt, is_pre_launch) => {
+					root.sync_config_cmd(index, config_opt, true, is_pre_launch);
+				}
+				
+				// Remove specific config option from global or game config with an index
+				remove_config_opt(index) => {
+					root.remove_config_opt(index, true);
+				}
+
+				// Remove specific pre-launch or post-exit command from global or game config with an index
+				remove_config_cmd(index, is_pre_launch) => {
+					root.remove_config_cmd(index, true, is_pre_launch);
 				}
 			}
 		}
@@ -197,26 +125,47 @@ Main := Window {
 			title: "Global Config";
 			global_config_layout := ConfigEdit {
 				enable_merge_button: false;
+				width: parent.width;
+				height: parent.height;
 
 				buttonpressed(index) => {
-					if (index == 0) {
-						root.add_item(false);
+					if (index == 0) { // Add pre-launch command
+						root.add_config_cmd(true, false);
 					}
-					if (index == 1) {
-						global_config_layout.visible = false;
-						startup_layout.visible = true;
+					if (index == 1) { // Add post-exit command
+						root.add_config_cmd(false, false);
 					}
-					if (index == 2) {
+					if (index == 2) { // Add config option
+						root.add_config_opt(false);
+					}
+					if (index == 3) { // Save config
 						root.save_config(false);
 					}
 				}
 				
+				// Sync the string with the placeholders to the rust variables
 				sync_placeholder_string(text, is_game_config) => {
 					root.sync_placeholder_string(text, is_game_config);
 				}
 
-				sync_value(index, config_opt) => {
+				// Sync a specific config option to either global or game config with an index
+				sync_config_opt(index, config_opt) => {
 					root.sync_config_opt(index, config_opt, false);
+				}
+				
+				// Sync a pre-launch or post-exit command to global or game config with an index
+				sync_config_cmd(index, config_opt, is_pre_launch) => {
+					root.sync_config_cmd(index, config_opt, false, is_pre_launch);
+				}
+
+				// Remove specific config option from global or game config with an index
+				remove_config_opt(index) => {
+					root.remove_config_opt(index, false);
+				}
+				
+				// Remove specific pre-launch or post-exit command from global or game config with an index
+				remove_config_cmd(index, is_pre_launch) => {
+					root.remove_config_cmd(index, false, is_pre_launch);
 				}
 			}
 		}

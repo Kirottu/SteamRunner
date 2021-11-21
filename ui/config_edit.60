@@ -1,0 +1,165 @@
+import { ScrollView, VerticalBox, HorizontalBox, Button, CheckBox, LineEdit } from "sixtyfps_widgets.60";
+import { ButtonBar } from "button_bar.60";
+
+export struct SixtyConfigCommand := {
+	command: string,
+	enabled: bool,
+	modified: bool,
+}
+
+export struct SixtyConfigOption := {
+	placeholder: string,
+	replace_with: string,
+	enabled: bool,
+	modified: bool,
+}
+
+export ConfigEdit := Rectangle {
+	callback buttonpressed(int);
+	callback sync_config_opt(int, SixtyConfigOption);
+	callback sync_config_cmd(int, SixtyConfigCommand, bool);
+	callback remove_config_opt(int);
+	callback remove_config_cmd(int, bool);
+	callback sync_placeholder_string(string, bool);
+
+	property <string> placeholder_string;
+	property <[SixtyConfigOption]> config_options;
+	property <[SixtyConfigCommand]> pre_launch_commands;
+	property <[SixtyConfigCommand]> post_exit_commands;
+	property <bool> enable_merge_button;
+		
+	placeholder_launch_edit := LineEdit {
+		height: 30px;
+		width: parent.width;
+		text: placeholder_string;
+		placeholder-text: "Enter placeholder string here";
+		edited => {
+			sync_placeholder_string(text, enable_merge_button);
+		}
+	}
+
+	ScrollView {
+		y: placeholder_launch_edit.height;
+		height: parent.height - button_bar.height - placeholder_launch_edit.height;
+		VerticalBox {
+			VerticalBox {
+				Text { text: "Placeholder+replacement configuration options"; } 
+				for option[i] in config_options : HorizontalBox {
+					property <int> ind: i;
+					property <SixtyConfigOption> config_opt: option;
+					alignment: stretch;
+					LineEdit {
+						text: config_opt.placeholder;
+						placeholder-text: "Insert placeholder text here";
+						edited => {
+							config_opt.modified = true;
+							config_opt.placeholder = text;
+							root.sync_config_opt(ind, config_opt);
+						}
+					}
+					LineEdit {
+						text: config_opt.replace_with;
+						placeholder-text: "Insert text to replace placeholder with here";
+						edited => {
+							config_opt.modified = true;
+							config_opt.replace_with = text;
+							root.sync_config_opt(ind, config_opt);
+						}
+					}
+					CheckBox {
+						width: 24px;
+						checked: option.enabled; 
+						toggled => { 
+							config_opt.enabled = !config_opt.enabled;
+							root.sync_config_opt(ind, config_opt);
+						}
+					}
+					Button {
+						text: "Remove";
+						clicked => {
+							root.remove_config_opt(ind);
+						}
+					}
+				}
+			}
+			VerticalBox {
+				Text { text: "Pre-Launch commands"; }
+				for command[i] in pre_launch_commands : HorizontalBox {
+					property <int> ind: i;
+					property <SixtyConfigCommand> command: command;
+					alignment: stretch;
+					LineEdit {
+						text: command.command;
+						placeholder-text: "Insert command here";
+						edited => {
+							command.modified = true;
+							command.command = text;
+							root.sync_config_cmd(ind, command, true);
+						}
+					}
+					CheckBox {
+						width: 24px;
+						checked: command.enabled; 
+						toggled => { 
+							command.enabled = !command.enabled;
+							root.sync_config_cmd(ind, command, true);
+						}
+					}
+					Button {
+						text: "Remove";
+						clicked => {
+							root.remove_config_cmd(ind, true);
+						}
+					}
+				}
+			}
+			VerticalBox {
+				Text { text: "Post-Exit commands"; }
+				for command[i] in post_exit_commands : HorizontalBox {
+					property <int> ind: i;
+					property <SixtyConfigCommand> command: command;
+					alignment: stretch;
+					LineEdit {
+						text: command.command;
+						placeholder-text: "Insert command here";
+						edited => {
+							command.modified = true;
+							command.command = text;
+							root.sync_config_cmd(ind, command, false);
+						}
+					}
+					CheckBox {
+						width: 24px;
+						checked: command.enabled; 
+						toggled => { 
+							command.enabled = !command.enabled;
+							root.sync_config_cmd(ind, command, false);
+						}
+					}
+					Button {
+						text: "Remove";
+						clicked => {
+							root.remove_config_cmd(ind, false);
+						}
+					}
+				}
+			}
+		}
+	}
+	button_bar := ButtonBar {
+		y: parent.height - height;
+		button_texts: enable_merge_button ? [
+						  "Merge Global Config",
+						  "Add Pre-Launch Cmd",
+						  "Add Post-Exit Cmd",
+						  "Add Config Option",
+						  "Save" ] : [
+						  "Add Pre-Launch Cmd",
+						  "Add Post-Exit Cmd",
+						  "Add Config Option",
+						  "Save"
+		];
+
+		buttonpressed(index) => { root.buttonpressed(index); }
+	}
+}
