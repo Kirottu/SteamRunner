@@ -32,7 +32,7 @@ pub struct ConfigCommand {
 // Entire struct to contain all ConfigOptions for the game specific config or the global config
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct GameConfig {
-    pub appid: u32,
+    pub appid: String,
     pub placeholder_launch_command: String,
     pub launch_command_modified: bool,
     pub placeholder_map: Vec<ConfigOption>,

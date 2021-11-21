@@ -22,23 +22,59 @@ lazy_static::lazy_static! {
 fn main() {
     let matches = App::new("SteamTinkerLaunch-rs")
         .arg(Arg::with_name("command").required(true).takes_value(true))
+        .arg(Arg::with_name("nosteam")
+                .help("Use specified identifier instead of steam appid (allows usage outside of steam)")
+                .long("no-steam")
+                .takes_value(true))
+        .arg(Arg::with_name("banner")
+             .help("Use this image as banner instead of trying to find one from steam cache using the appid.")
+             .long("banner")
+             .takes_value(true))
+        .arg(Arg::with_name("logo")
+             .help("Same as banner, but for the logo")
+             .long("logo")
+             .takes_value(true))
         .get_matches();
 
     let command = matches.value_of("command").unwrap();
 
     // Parse the initial command variable supplied by steam to find the steam AppId, which is used
     // for identifying the game specific config files
-    let appid_index = command.find("AppId=").unwrap();
-    let mut appid_str: String = String::new();
+    let nosteam = matches.is_present("nosteam");
 
-    for chr in command.chars().skip(appid_index) {
-        if chr == ' ' {
-            break;
+    let appid = if nosteam {
+        matches.value_of("nosteam").unwrap().to_string()
+    } else {
+        let appid_index = command.find("AppId=").unwrap();
+        let mut appid_str: String = String::new();
+
+        for chr in command.chars().skip(appid_index) {
+            if chr == ' ' {
+                break;
+            }
+            appid_str.push(chr);
         }
-        appid_str.push(chr);
-    }
+        appid_str.split("=").last().unwrap().to_string()
+    };
 
-    let appid = appid_str.split("=").last().unwrap().parse::<u32>().unwrap();
+    let banner_path = if matches.is_present("banner") {
+        matches.value_of("banner").unwrap().to_string()
+    } else {
+        format!(
+            "{}/.local/share/Steam/appcache/librarycache/{}_library_hero.jpg",
+            env::var("HOME").unwrap(),
+            GAME_CONFIG.lock().unwrap().appid,
+        )
+    };
+    let logo_path = if matches.is_present("logo") {
+        matches.value_of("logo").unwrap().to_string()
+    } else {
+        format!(
+            "{}/.local/share/Steam/appcache/librarycache/{}_logo.png",
+            env::var("HOME").unwrap(),
+            GAME_CONFIG.lock().unwrap().appid
+        )
+    };
 
     // Get the config directory using environmental variables, and falling back to a standard path
     // if the environmental variables do not exist. $HOME is although required
@@ -57,7 +93,7 @@ fn main() {
             GameConfig::load(&format!("{}/global_config.yaml", config_dir))
         } else {
             let global_config = GameConfig {
-                appid: 0,
+                appid: "".to_string(),
                 placeholder_launch_command: "%mh% %ov% %og% %command%".to_string(),
                 launch_command_modified: false,
                 placeholder_map: vec![
@@ -92,10 +128,10 @@ fn main() {
         } else {
             let mut game_config = GLOBAL_CONFIG.lock().unwrap();
             game_config.appid = appid;
-            create_new_game_config(&config_dir, &game_config, appid)
+            create_new_game_config(&config_dir, &game_config, &game_config.appid)
         };
 
-    if ui::run(&GLOBAL_CONFIG, &GAME_CONFIG) {
+    if ui::run(&GLOBAL_CONFIG, &GAME_CONFIG, &banner_path, &logo_path) {
         exit(1);
     }
 
@@ -176,7 +212,7 @@ fn create_config_dirs(config_dir: &String) {
 fn create_new_game_config(
     config_dir: &String,
     global_config: &GameConfig,
-    appid: u32,
+    appid: &String,
 ) -> GameConfig {
     if !Path::new(&format!("{}/game_configs", config_dir)).exists() {
         create_config_dirs(config_dir);

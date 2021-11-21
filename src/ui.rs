@@ -58,29 +58,20 @@ impl From<SixtyConfigCommand> for ConfigCommand {
 pub fn run(
     global_config: &'static Arc<Mutex<GameConfig>>,
     game_config: &'static Arc<Mutex<GameConfig>>,
+    banner_path: &String,
+    logo_path: &String,
 ) -> bool {
     let main_window = Main::new();
     let main_window_weak = main_window.as_weak();
     // Load the banner image from steam library cache
-    let banner_path = format!(
-        "{}/.local/share/Steam/appcache/librarycache/{}_library_hero.jpg",
-        env::var("HOME").unwrap(),
-        game_config.lock().unwrap().appid,
-    );
-    let logo_path = format!(
-        "{}/.local/share/Steam/appcache/librarycache/{}_logo.png",
-        env::var("HOME").unwrap(),
-        game_config.lock().unwrap().appid
-    );
-    let banner = sixtyfps::Image::load_from_path(Path::new(&banner_path)).unwrap();
-    let logo = sixtyfps::Image::load_from_path(Path::new(&logo_path)).unwrap();
-
-    main_window.set_logo(logo);
-    main_window.set_banner(banner);
-    main_window.set_appid(sixtyfps::SharedString::from(format!(
-        "{}",
-        game_config.lock().unwrap().appid
-    )));
+    match sixtyfps::Image::load_from_path(Path::new(banner_path)) {
+        Ok(banner) => main_window.set_banner(banner),
+        Err(why) => println!("Error loading banner: {:?}", why),
+    }
+    match sixtyfps::Image::load_from_path(Path::new(logo_path)) {
+        Ok(logo) => main_window.set_logo(logo),
+        Err(why) => println!("Error loading logo: {:?}", why),
+    }
 
     main_window.set_game_launch_placeholder(sixtyfps::SharedString::from(
         game_config
@@ -182,7 +173,7 @@ pub fn run(
     main_window.on_save_config(move |is_game_config: bool| {
         let (config, save_path) = if is_game_config {
             let game_config = game_config.lock().unwrap();
-            let appid = game_config.appid;
+            let appid = game_config.appid.clone();
             (
                 game_config,
                 format!(
