@@ -63,7 +63,7 @@ fn main() {
         format!(
             "{}/.local/share/Steam/appcache/librarycache/{}_library_hero.jpg",
             env::var("HOME").unwrap(),
-            GAME_CONFIG.lock().unwrap().appid,
+            appid,
         )
     };
     let logo_path = if matches.is_present("logo") {
@@ -72,9 +72,11 @@ fn main() {
         format!(
             "{}/.local/share/Steam/appcache/librarycache/{}_logo.png",
             env::var("HOME").unwrap(),
-            GAME_CONFIG.lock().unwrap().appid
+            appid
         )
     };
+
+    println!("{} {}", banner_path, logo_path);
 
     // Get the config directory using environmental variables, and falling back to a standard path
     // if the environmental variables do not exist. $HOME is although required

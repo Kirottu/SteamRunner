@@ -85,6 +85,28 @@ impl GameConfig {
                 self.placeholder_map.push((*config_opt).clone());
             }
         }
+        for config_cmd in &config.pre_launch_commands {
+            let mut exists = false;
+            for self_cmd in &mut self.pre_launch_commands {
+                if self_cmd.command == config_cmd.command {
+                    exists = true;
+                }
+            }
+            if !exists {
+                self.pre_launch_commands.push((*config_cmd).clone());
+            }
+        }
+        for config_cmd in &config.post_exit_commands {
+            let mut exists = false;
+            for self_cmd in &mut self.post_exit_commands {
+                if self_cmd.command == config_cmd.command {
+                    exists = true;
+                }
+            }
+            if !exists {
+                self.post_exit_commands.push((*config_cmd).clone());
+            }
+        }
         if !self.launch_command_modified {
             self.placeholder_launch_command = config.placeholder_launch_command.clone();
         }
