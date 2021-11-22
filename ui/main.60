@@ -3,6 +3,7 @@ import { ConfigEdit, SixtyConfigOption, SixtyConfigCommand } from "config_edit.6
 
 Main := Window {
 	title: "SteamTinkerLaunch-rs";
+	
 	height: 400px;
 	width: 800px;
 	
@@ -51,6 +52,9 @@ Main := Window {
 					height: parent.height;
 					width: 600px;
 					source-clip-x: 200;
+					source-clip-y: 0;
+					source-clip-width: banner.width;
+					source-clip-height: banner.height;
 					Image {
 						source: logo;
 						width: 200px;

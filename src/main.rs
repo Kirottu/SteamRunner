@@ -34,6 +34,10 @@ fn main() {
              .help("Same as banner, but for the logo")
              .long("logo")
              .takes_value(true))
+        .arg(Arg::with_name("nogui")
+             .help("Disable the configuration gui")
+             .long("no-gui")
+             .takes_value(false))
         .get_matches();
 
     let command = matches.value_of("command").unwrap();
@@ -132,9 +136,10 @@ fn main() {
             game_config.appid = appid;
             create_new_game_config(&config_dir, &game_config, &game_config.appid)
         };
-
-    if ui::run(&GLOBAL_CONFIG, &GAME_CONFIG, &banner_path, &logo_path) {
-        exit(1);
+    if !matches.is_present("nogui") {
+        if ui::run(&GLOBAL_CONFIG, &GAME_CONFIG, &banner_path, &logo_path) {
+            exit(1);
+        }
     }
 
     let game_config = GAME_CONFIG.lock().unwrap();
