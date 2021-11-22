@@ -49,7 +49,15 @@ fn main() {
     let appid = if nosteam {
         matches.value_of("nosteam").unwrap().to_string()
     } else {
-        let appid_index = command.find("AppId=").unwrap();
+        let appid_index = match command.find("AppId=") {
+            Some(appid_index) => appid_index,
+            None => {
+                println!(
+                    "Failed to find appid from command string, did you mean to use --no-steam?"
+                );
+                exit(1);
+            }
+        };
         let mut appid_str: String = String::new();
 
         for chr in command.chars().skip(appid_index) {

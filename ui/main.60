@@ -7,6 +7,8 @@ Main := Window {
 	height: 400px;
 	width: 800px;
 	
+	forward-focus: startup_layout;
+
 	callback quit();
 	
 	callback save_config(bool);
@@ -43,7 +45,10 @@ Main := Window {
 			startup_layout := FocusScope {
 				has-focus: false;
 				key-pressed(event) => {
-					debug(event.text);
+					if (event.text == "\n") {
+						launch-cancelled = false;
+						root.quit();
+					}
 					accept
 				}
 				Image {
@@ -73,7 +78,7 @@ Main := Window {
 					Button {
 						width: 180px;
 						height: 60px;
-						text: "Start Game";
+						text: "Start Game (Press Enter)";
 						clicked => { launch_cancelled = false; root.quit(); }
 					}
 				}
