@@ -5,7 +5,6 @@ use clap::{App, Arg};
 use game_config::{ConfigOption, GameConfig};
 use notify_rust::Notification;
 use std::fs::File;
-use std::io::{Read, Write};
 use std::process::{Child, Stdio};
 use std::{
     env, fs,
@@ -94,8 +93,6 @@ fn main() {
         )
     };
 
-    println!("{} {}", banner_path, logo_path);
-
     // Get the config directory using environmental variables, and falling back to a standard path
     // if the environmental variables do not exist. $HOME is although required
     let config_dir = env::var("XDG_CONFIG_HOME")
@@ -180,8 +177,6 @@ fn main() {
         }
     }
 
-    let stdout = File::create(format!("{}/logs/{}_stdout.log", &config_dir, &appid)).unwrap();
-    let stderr = File::create(format!("{}/logs/{}_stderr.log", &config_dir, &appid)).unwrap();
     // Start the game and wait until it exits
     let handle: Option<Child> = match Command::new("sh")
         .arg("-c")
