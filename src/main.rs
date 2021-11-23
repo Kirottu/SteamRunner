@@ -4,7 +4,9 @@ mod ui;
 use clap::{App, Arg};
 use game_config::{ConfigOption, GameConfig};
 use notify_rust::Notification;
-use std::process::Child;
+use std::fs::File;
+use std::io::{Read, Write};
+use std::process::{Child, Stdio};
 use std::{
     env, fs,
     path::Path,
@@ -37,6 +39,10 @@ fn main() {
         .arg(Arg::with_name("nogui")
              .help("Disable the configuration gui")
              .long("no-gui")
+             .takes_value(false))
+        .arg(Arg::with_name("log")
+             .help("Write game output to a log file")
+             .long("log")
              .takes_value(false))
         .get_matches();
 
@@ -141,7 +147,7 @@ fn main() {
             GameConfig::load(&format!("{}/game_configs/{}.yaml", config_dir, appid))
         } else {
             let mut game_config = GLOBAL_CONFIG.lock().unwrap();
-            game_config.appid = appid;
+            game_config.appid = appid.clone();
             create_new_game_config(&config_dir, &game_config, &game_config.appid)
         };
     if !matches.is_present("nogui") {
@@ -174,10 +180,26 @@ fn main() {
         }
     }
 
+    let stdout = File::create(format!("{}/logs/{}_stdout.log", &config_dir, &appid)).unwrap();
+    let stderr = File::create(format!("{}/logs/{}_stderr.log", &config_dir, &appid)).unwrap();
     // Start the game and wait until it exits
     let handle: Option<Child> = match Command::new("sh")
         .arg("-c")
         .arg(game_config.get_launch_command(&command.to_string()))
+        .stdout(if matches.is_present("log") {
+            Stdio::from(
+                File::create(format!("{}/logs/{}_stdout.log", &config_dir, &appid)).unwrap(),
+            )
+        } else {
+            Stdio::null()
+        })
+        .stderr(if matches.is_present("log") {
+            Stdio::from(
+                File::create(format!("{}/logs/{}_stderr.log", &config_dir, &appid)).unwrap(),
+            )
+        } else {
+            Stdio::null()
+        })
         .spawn()
     {
         Ok(handle) => Some(handle),
@@ -221,7 +243,8 @@ fn main() {
 
 fn create_config_dirs(config_dir: &String) {
     fs::create_dir(config_dir).unwrap_or(());
-    fs::create_dir(&format!("{}/game_configs", config_dir)).unwrap();
+    fs::create_dir(&format!("{}/game_configs", config_dir)).unwrap_or(());
+    fs::create_dir(&format!("{}/logs", config_dir)).unwrap_or(());
 }
 
 fn create_new_game_config(
