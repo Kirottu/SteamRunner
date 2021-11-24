@@ -21,7 +21,7 @@ lazy_static::lazy_static! {
 }
 
 fn main() {
-    let matches = App::new("SteamTinkerLaunch-rs")
+    let matches = App::new("SteamRunner")
         .arg(Arg::with_name("command").required(true).takes_value(true))
         .arg(Arg::with_name("nosteam")
                 .help("Use specified identifier instead of steam appid (allows usage outside of steam)")
@@ -96,7 +96,7 @@ fn main() {
     // Get the config directory using environmental variables, and falling back to a standard path
     // if the environmental variables do not exist. $HOME is although required
     let config_dir = env::var("XDG_CONFIG_HOME")
-        .unwrap_or(format!("{}/.config/stl-rs", env::var("HOME").unwrap()));
+        .unwrap_or(format!("{}/.config/steamrunner", env::var("HOME").unwrap()));
 
     // Make sure the config dir for stl-rs exists, if not create the directories
     if !Path::new(&config_dir).exists() {
