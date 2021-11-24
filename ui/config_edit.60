@@ -42,7 +42,9 @@ export ConfigEdit := Rectangle {
 		y: placeholder_launch_edit.height;
 		height: parent.height - button_bar.height - placeholder_launch_edit.height;
 		VerticalBox {
+			alignment: start;
 			VerticalBox {
+				alignment: start;
 				Text { text: "Placeholder+replacement configuration options"; } 
 				for option[i] in config_options : HorizontalBox {
 					property <int> ind: i;
@@ -83,6 +85,7 @@ export ConfigEdit := Rectangle {
 				}
 			}
 			VerticalBox {
+				alignment: start;
 				Text { text: "Pre-Launch commands"; }
 				for command[i] in pre_launch_commands : HorizontalBox {
 					property <int> ind: i;
@@ -114,6 +117,7 @@ export ConfigEdit := Rectangle {
 				}
 			}
 			VerticalBox {
+				alignment: start;
 				Text { text: "Post-Exit commands"; }
 				for command[i] in post_exit_commands : HorizontalBox {
 					property <int> ind: i;

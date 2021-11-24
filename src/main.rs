@@ -98,7 +98,7 @@ fn main() {
     let config_dir = env::var("XDG_CONFIG_HOME")
         .unwrap_or(format!("{}/.config/steamrunner", env::var("HOME").unwrap()));
 
-    // Make sure the config dir for stl-rs exists, if not create the directories
+    // Make sure the config dir for steamlauncher exists, if not create the directories
     if !Path::new(&config_dir).exists() {
         create_config_dirs(&config_dir);
     }
@@ -114,16 +114,16 @@ fn main() {
                 placeholder_launch_command: "%mh% %ov% %og% %command%".to_string(),
                 launch_command_modified: false,
                 placeholder_map: vec![
-                    ConfigOption::new(&"%mh%".to_string(), &"mangohud ".to_string(), false, false),
+                    ConfigOption::new(&"%mh%".to_string(), &"mangohud".to_string(), false, false),
                     ConfigOption::new(
                         &"%ov%".to_string(),
-                        &"obs-vkcapture ".to_string(),
+                        &"obs-vkcapture".to_string(),
                         false,
                         false,
                     ),
                     ConfigOption::new(
                         &"%og%".to_string(),
-                        &"obs-glcapture ".to_string(),
+                        &"obs-glcapture".to_string(),
                         false,
                         false,
                     ),

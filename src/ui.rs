@@ -177,7 +177,7 @@ pub fn run(
             (
                 game_config,
                 format!(
-                    "{}/.config/stl-rs/game_configs/{}.yaml",
+                    "{}/.config/steamrunner/game_configs/{}.yaml",
                     env::var("HOME").unwrap(),
                     appid
                 ),
@@ -186,7 +186,7 @@ pub fn run(
             (
                 global_config.lock().unwrap(),
                 format!(
-                    "{}/.config/stl-rs/global_config.yaml",
+                    "{}/.config/steamrunner/global_config.yaml",
                     env::var("HOME").unwrap()
                 ),
             )

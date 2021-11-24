@@ -74,9 +74,11 @@ impl GameConfig {
         for config_opt in &config.placeholder_map {
             let mut replaced = false;
             for self_opt in &mut self.placeholder_map {
-                if !self_opt.modified && self_opt.placeholder == config_opt.placeholder {
-                    self_opt.placeholder = config_opt.placeholder.clone();
-                    self_opt.replace_with = config_opt.replace_with.clone();
+                if self_opt.placeholder == config_opt.placeholder {
+                    if !self_opt.modified {
+                        self_opt.placeholder = config_opt.placeholder.clone();
+                        self_opt.replace_with = config_opt.replace_with.clone();
+                    }
                     replaced = true;
                     break;
                 }
